@@ -90,6 +90,8 @@ struct features { // struct to store features belonging to the same
 
     return -atan2(det, dot)+(3.1415/2); //*180/3.1415;
   }
+
+  float category;
 };
 
 #endif // FEATURES_H

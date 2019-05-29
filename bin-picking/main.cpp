@@ -1,27 +1,3 @@
-/*
-Todo:
-- same interval for features (and the diameter must weight more)
-
-Changes from last:
-- transformation matrix
-- source << "src/bin-picking/training_data/cat_" << i << ".dat"; // run from build dir
-- time measuring
-- double check       int _cat = category; (not minus)
-- ros publishing
-- python script (cmake list)
-- imshow and waitkey removed
-- added 3.14 to RY-value (turn gripper around)
-- add 3.14/2 to RZ-value (turn gripper)
-
-Changes when setup is final:
-- place 60 cm above bin
-- correct frame transformation (position and orientation)
-- frame size/rectangle adjustment
-- maybe change area, ratio and depth limits
-- change number of categories and make new training data: change 'define N_CATS'
-- change number of features pr. object: vect_test and write to file (two times)
-*/
-
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <librealsense2/rsutil.h>
 #include <opencv2/core.hpp>
@@ -138,30 +114,6 @@ struct Program {
                                      // object. Pass the object position in the
                                      // vector
 
-            //Publish position and orientation
-            std_msgs::Float32MultiArray msg_pose;
-            msg_pose.data.clear();
-            for (int i = 0; i < 3; i++) //add position to array
-    		      {
-        			msg_pose.data.push_back(feature.xyz_coords[i]);
-        		}
-            for (int i = 0; i < 3; i++) //add orientation to array
-              {
-              msg_pose.data.push_back(feature.RPY[i]);
-            }
-        		pose_pub.publish(msg_pose);
-
-
-            //Publish object features for plotting
-            std_msgs::Float32MultiArray msg_feat;
-            msg_feat.data.clear();
-
-            msg_feat.data.push_back(feature.color_hue);
-            msg_feat.data.push_back(feature.ratio/3.24*100);
-            msg_feat.data.push_back(feature.area /12150*100);
-
-            feat_pub.publish(msg_feat);
-
         //find elapsed time for detecting and locating
        	auto time_2 = chrono::steady_clock::now();
         cout << "Detected and located an object in "
@@ -181,11 +133,38 @@ struct Program {
         find_cat(vect_pose); // categorize object (the position of the object in
                              // the vector is passed)
 
-       //find elapsed time for classification
-       auto time_3 = chrono::steady_clock::now();
-       cout << "Classified the object in "
-       << chrono::duration_cast<chrono::microseconds>(time_3 - time_2).count()
-       << " µs"<<endl;
+         //find elapsed time for classification
+         auto time_3 = chrono::steady_clock::now();
+         cout << "Classified the object in "
+         << chrono::duration_cast<chrono::microseconds>(time_3 - time_2).count()
+         << " µs"<<endl;
+
+
+         //Publish position and orientation
+         std_msgs::Float32MultiArray msg_pose;
+         msg_pose.data.clear();
+         for (int i = 0; i < 3; i++) //add position to array
+          {
+            msg_pose.data.push_back(feature.xyz_coords[i]);
+          }
+         for (int i = 0; i < 3; i++) //add orientation to array
+          {
+             msg_pose.data.push_back(feature.RPY[i]);
+         }
+         msg_pose.data.push_back(FEATURES[FEATURES.size() - vect_pose].category); //add category to array
+
+         pose_pub.publish(msg_pose);
+
+
+         //Publish object features for plotting
+         std_msgs::Float32MultiArray msg_feat;
+         msg_feat.data.clear();
+
+         msg_feat.data.push_back(feature.color_hue);
+         msg_feat.data.push_back(feature.ratio/3.24*100);
+         msg_feat.data.push_back(feature.area /12150*100);
+
+         feat_pub.publish(msg_feat);
 
         waitKey(0);
       } else {

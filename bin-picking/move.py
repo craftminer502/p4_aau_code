@@ -156,68 +156,39 @@ def init():
     rospy.sleep(0.5)
 
 
-def callback(msg):
-    rospy.loginfo(msg) #debug
-    global prev_state
-    global req
-    global pub
-
-    goal = PoseStamped()
-    goal.header.stamp = rospy.Time.now()
-    goal.header.frame_id = "world"
-    goal.pose.position.x = msg.data[0]
-    goal.pose.position.y = msg.data[1]
-    goal.pose.position.z = msg.data[2]
-
-    quaternion = tf.transformations.quaternion_from_euler(msg[3], msg[4], msg[5])
-    pose_goal.pose.orientation.x = quaternion[0]
-    pose_goal.pose.orientation.y = quaternion[1]
-    pose_goal.pose.orientation.z = quaternion[2]
-    pose_goal.pose.orientation.w = quaternion[3]
-
-    req.ik_request.pose_stamped = goal
-    resp = ik_srv.call(req)
-    print(resp)
-
-    if(resp.error_code.val == -31):
-        print('No IK found!')
-        return
-
-    diff = np.array(resp.solution.joint_state.position)-np.array(prev_state)
-    max_diff = np.max(diff)
-    if(max_diff > 1.0):
-        print('Singularity detected. Skipping!')
-        return
-
-    traj = JointTrajectory()
-    point = JointTrajectoryPoint()
-    traj.header.frame_id = pose_goal.header.frame_id
-    traj.joint_names = resp.solution.joint_state.name
-    point.positions = resp.solution.joint_state.position
-    point.time_from_start.secs = 20
-    traj.points.append(point)
-    rospy.sleep(0.5)
-    pub.publish(traj)
-    print(traj)
-    print("should be published")
-
-    # Update previous state of robot to current state
-    prev_state = resp.solution.joint_state.position
-
-    rospy.sleep(6)
-    command.rPR = 255
-    grip.publish(command)
-    print("closed")
-    rospy.sleep(6)
-    command.rPR = 0
-    grip.publish(command)
-    print("open")
-
+def callback(data):
+    rospy.loginfo(data)
 
 def move():
     global prev_state
     global req
     global pub
+    global tf_listener
+
+    execution_time = 0.5
+
+    seconds = rospy.get_time()
+    seconds -= 0.1
+    now = rospy.Time.from_sec(seconds)
+
+    while True:
+        try:
+            #(trans, rot) = tf_listener.lookupTransform("ee_link", "/world", rospy.Time(0))
+            break
+        except:
+            rospy.sleep(0.5)
+
+
+    # Send request for new pose to IK (inverse kinematics) service
+
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
+    print("KODE!!!!!!!!!!!!!!!!!!!!!!")
 
     pose_goal = PoseStamped()
     pose_goal.header.stamp = rospy.Time.now()
@@ -275,6 +246,14 @@ if __name__ == '__main__':
     init()
     #while True:
     move()
+    rospy.sleep(6)
+    command.rPR = 255
+    grip.publish(command)
+    print("closed")
+    rospy.sleep(6)
+    command.rPR = 0
+    grip.publish(command)
+    print("open")
         #move2()
         #rospy.sleep(3)
 

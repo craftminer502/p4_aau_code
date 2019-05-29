@@ -697,6 +697,7 @@ void find_cat(int vect_pose) {
       pose = i;
     }
   }
+  FEATURES[FEATURES.size() - vect_pose].category = (float)pose; //add category to feature vector
 
   switch (pose) {
   case 0:
@@ -720,7 +721,6 @@ void find_cat(int vect_pose) {
   default:
     break;
   }
-
 }
 
 
